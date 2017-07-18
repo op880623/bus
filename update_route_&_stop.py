@@ -2,11 +2,15 @@ import os
 import sys
 import re
 import shelve
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
 
 from bus.models import BusRoute, BusStop
+
+
+print('\nupdate time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 dbRoute = 'route'
 dbStop = 'stop'
@@ -44,18 +48,35 @@ for routeId in routeIds:
     route = BeautifulSoup(page.text, "html.parser")
 
     routeName = str(route.find(class_='stationlist-title').string)
-    busRoute = BusRoute(id=routeId, name=routeName)
 
+# check id and name
+    try:
+        busRoute = routeData[routeId]
+        if busRoute.name != routeName:
+            print(busRoute.name + ' is renamed to ' + routeName + '.')
+            busRoute.name = routeName
+    except KeyError:
+        busRoute = BusRoute(id=routeId, name=routeName)
+        print(busRoute.name + ' is created.')
 
+# check stops on route
+    route_forward = []
     goStops = route.find(id='GoDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
     for stop_raw_data in goStops:
         stop = extract_stop_info(stop_raw_data)
-        busRoute.route_forward.append(stop['id'])
+        route_forward.append(stop['id'])
+    if busRoute.route_forward != route_forward:
+        print(busRoute.name + " forward route is updated.")
+        busRoute.route_forward = route_forward
 
+    route_backward = []
     backStops = route.find(id='BackDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
     for stop_raw_data in backStops:
         stop = extract_stop_info(stop_raw_data)
-        busRoute.route_backward.append(stop['id'])
+        route_backward.append(stop['id'])
+    if busRoute.route_backward != route_backward:
+        print(busRoute.name + " 's backward route is updated.")
+        busRoute.route_backward = route_backward
 
     routeData[busRoute.id] = busRoute
     print(busRoute.name + ' is updated.')
