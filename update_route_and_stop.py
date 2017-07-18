@@ -10,13 +10,17 @@ from bs4 import BeautifulSoup
 from bus.models import BusRoute, BusStop
 
 
-print('\nupdate time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+logFile = open('update.log', 'a', encoding='utf8')
 
 dbRoute = 'route'
 dbStop = 'stop'
 
 routeData = shelve.open(dbRoute)
 stopData = shelve.open(dbStop)
+
+def log(text):
+    print(text)
+    logFile.write(text + '\n')
 
 def extract_stop_info(stop):
     index = str(stop.find(class_='auto-list-stationlist-number').string)
@@ -26,6 +30,16 @@ def extract_stop_info(stop):
     longitude = stop.find(id='item_Longitude')['value']
     return {'index': index, 'name': name, 'id': id, 'latitude': latitude, 'longitude': longitude}
 
+def update_stops_on_route(stops):
+    routeStops = []
+    for stopRawData in stops:
+        # stop = extract_stop_info(stopRawData)
+        # routeStops.append(stop['id'])
+        routeStops.append(stopRawData.find(id='item_UniStopId')['value'])
+    return routeStops
+
+
+log('\nupdate time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 # get all routes' id
 # now get from file
@@ -39,10 +53,10 @@ routeIds = re.findall("id: (\S+)", idSource)
 
 
 # update routes' infomation
-for routeId in routeIds:
+for routeId in routeIds[:5]:
     page = requests.get("https://ebus.gov.taipei/Route/StopsOfRoute?routeid=" + routeId)
     if page.status_code != 200:
-        print('website of route ' + routeId + ' is broken or not found.')
+        log('website of route ' + routeId + ' is broken or not found.')
         continue
 
     route = BeautifulSoup(page.text, "html.parser")
@@ -53,33 +67,27 @@ for routeId in routeIds:
     try:
         busRoute = routeData[routeId]
         if busRoute.name != routeName:
-            print(busRoute.name + ' is renamed to ' + routeName + '.')
+            log(busRoute.name + ' is renamed to ' + routeName + '.')
             busRoute.name = routeName
     except KeyError:
         busRoute = BusRoute(id=routeId, name=routeName)
-        print(busRoute.name + ' is created.')
+        log(busRoute.name + ' is created.')
 
 # check stops on route
-    route_forward = []
-    goStops = route.find(id='GoDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
-    for stop_raw_data in goStops:
-        stop = extract_stop_info(stop_raw_data)
-        route_forward.append(stop['id'])
-    if busRoute.route_forward != route_forward:
-        print(busRoute.name + " forward route is updated.")
-        busRoute.route_forward = route_forward
+    stops = route.find(id='GoDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
+    routeStops = update_stops_on_route(stops)
+    if busRoute.routeForward != routeStops:
+        log(busRoute.name + ' forward route is updated.')
+        busRoute.routeForward = routeStops
 
-    route_backward = []
-    backStops = route.find(id='BackDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
-    for stop_raw_data in backStops:
-        stop = extract_stop_info(stop_raw_data)
-        route_backward.append(stop['id'])
-    if busRoute.route_backward != route_backward:
-        print(busRoute.name + " 's backward route is updated.")
-        busRoute.route_backward = route_backward
+    stops = route.find(id='BackDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
+    routeStops = update_stops_on_route(stops)
+    if busRoute.routeBackward != routeStops:
+        log(busRoute.name + ' backward route is updated.')
+        busRoute.routeBackward = routeStops
 
     routeData[busRoute.id] = busRoute
-    print(busRoute.name + ' is updated.')
+    log(busRoute.name + ' is updated.')
 
 # structure of https://ebus.gov.taipei/Route/StopsOfRoute?routeid= routeId
 # route <htnl>
@@ -89,7 +97,6 @@ for routeId in routeIds:
 #   └ backStops <li>
 
 
-
-
 routeData.close()
 stopData.close()
+logFile.close()

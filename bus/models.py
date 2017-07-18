@@ -6,8 +6,8 @@ class BusRoute(object):
     def __init__(self, id, name=''):
         self.id = id
         self.name = name
-        self.route_forward = []
-        self.route_backward = []
+        self.routeForward = []
+        self.routeBackward = []
 
 
 class BusStop(object):
