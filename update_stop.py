@@ -41,8 +41,8 @@ for stopId in list(stopIds):
     try:
         stopName = re.search('<p class="routelist-text">(.+)</p>', page.text).group(1)
     except:
-        log(busStop.id + ' name has problem.\n')
-        stopName = ''
+        log(stopId + ' name has problem.\n')
+        continue
     try:
         busStop = stopData[stopId]
         if busStop.name != stopName:
