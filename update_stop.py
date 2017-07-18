@@ -33,7 +33,7 @@ routeData.close()
 # update every stop
 for stopId in list(stopIds):
     page = requests.get("https://ebus.gov.taipei/Stop/RoutesOfStop?Stopid=" + stopId)
-    if page.status_code != 200:
+    if page.status_code != 200 or page.url == "https://ebus.gov.taipei/Query/BusRoute":
         log('website of stop ' + stopId + ' is broken or not found.')
         continue
 
@@ -41,7 +41,7 @@ for stopId in list(stopIds):
     try:
         stopName = re.search('<p class="routelist-text">(.+)</p>', page.text).group(1)
     except:
-        log(stopId + ' name has problem.\n')
+        log('stop ' + stopId + ' name has problem.\n')
         continue
     try:
         busStop = stopData[stopId]
