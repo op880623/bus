@@ -17,6 +17,8 @@ class BusStop(object):
         self.id = id
         self.name = name
         self.route = []
+        self.latitude = 0
+        self.longitude = 0
 
     def route_add(routeId):
         if isinstance(routeId, str):

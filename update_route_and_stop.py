@@ -39,7 +39,8 @@ def update_stops_on_route(stops):
     return routeStops
 
 
-log('\nupdate time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+# update routes' infomation
+log('\nstart update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 # get all routes' id
 # now get from file
@@ -51,9 +52,8 @@ routeIds = re.findall("id: (\S+)", idSource)
 # page = requests.get("https://ebus.gov.taipei/Query/BusRoute")
 # get routeIds in page.text
 
-
-# update routes' infomation
-for routeId in routeIds[:5]:
+# update every route
+for routeId in routeIds:
     page = requests.get("https://ebus.gov.taipei/Route/StopsOfRoute?routeid=" + routeId)
     if page.status_code != 200:
         log('website of route ' + routeId + ' is broken or not found.')
@@ -87,7 +87,7 @@ for routeId in routeIds[:5]:
         busRoute.routeBackward = routeStops
 
     routeData[busRoute.id] = busRoute
-    log(busRoute.name + ' is updated.')
+    print(busRoute.name + ' is updated.')
 
 # structure of https://ebus.gov.taipei/Route/StopsOfRoute?routeid= routeId
 # route <htnl>
@@ -95,6 +95,60 @@ for routeId in routeIds[:5]:
 # │ └ goStops <li>
 # └ backDirection <ul>
 #   └ backStops <li>
+
+log('\nfinish update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+
+
+# update stops' infomation
+log('\nstart update stop time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
+# get all stops' id from all routes
+stopIds = set()
+for key in routeData.keys():
+    stopIds = stopIds.union(set(routeData[key].routeForward))
+    stopIds = stopIds.union(set(routeData[key].routeBackward))
+
+# update every stop
+for stopId in list(stopIds):
+    page = requests.get("https://ebus.gov.taipei/Stop/RoutesOfStop?Stopid=" + stopId)
+    if page.status_code != 200:
+        log('website of stop ' + stopId + ' is broken or not found.')
+        continue
+
+# check id and name
+    stopName = re.search('<p class="routelist-text">(.+)</p>', page.text).group(1)
+    try:
+        busStop = stopData[stopId]
+        if busStop.name != stopName:
+            log(busStop.name + ' is renamed to ' + stopName + '.')
+            busStop.name = stopName
+    except KeyError:
+        busStop = BusStop(id=stopId, name=stopName)
+        log(busStop.name + ' is created.')
+
+# check route pass stop
+    route = re.findall('"UniRouteId":"(\d+)"', page.text)
+    if busStop.route != route:
+        busStop.route = route
+        log(busStop.name + ' route is updated.')
+
+# check stop's location
+    latitude = float(re.search('"Latitude":(\d+.\d+)', page.text).group(1))
+    if busStop.latitude != latitude:
+        busStop.latitude = latitude
+        log(busStop.name + ' latitude is updated.')
+
+    longitude = float(re.search('"Longitude":(\d+.\d+)', page.text).group(1))
+    if busStop.longitude != longitude:
+        busStop.longitude = longitude
+        log(busStop.name + ' longitude is updated.')
+
+    stopData[busStop.id] = busStop
+    print(busStop.name + ' is updated.')
+
+log('\nfinish update stop time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+
 
 
 routeData.close()
