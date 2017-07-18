@@ -3,7 +3,7 @@ import re
 class BusRoute(object):
 
 
-    def __init__(self, name):
+    def __init__(self, id, name=''):
         self.id = id
         self.name = name
         self.route_forward = []
@@ -20,5 +20,4 @@ class BusStop(object):
 
     def route_add(routeId):
         if isinstance(routeId, str):
-            if re.search("^\d+$", routeId):
-                self.route.append(routeId)
+            self.route.append(routeId)

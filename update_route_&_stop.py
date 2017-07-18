@@ -8,11 +8,15 @@ from bs4 import BeautifulSoup
 
 from bus.models import BusRoute, BusStop
 
+dbRoute = 'route'
+dbStop = 'stop'
 
+routeData = shelve.open(dbRoute)
+stopData = shelve.open(dbStop)
 
 def extract_stop_info(stop):
-    index = stop.find(class_='auto-list-stationlist-number').string
-    name = stop.find(class_='auto-list-stationlist-place').string
+    index = str(stop.find(class_='auto-list-stationlist-number').string)
+    name = str(stop.find(class_='auto-list-stationlist-place').string)
     id = stop.find(id='item_UniStopId')['value']
     latitude = stop.find(id='item_Latitude')['value']
     longitude = stop.find(id='item_Longitude')['value']
@@ -25,40 +29,36 @@ def extract_stop_info(stop):
 with open('routeid.txt', encoding='utf8') as sourceFile:
     idSource = sourceFile.read()
 
-routeIds = re.findall("id: (\d+)", idSource)
+routeIds = re.findall("id: (\S+)", idSource)
 # page = requests.get("https://ebus.gov.taipei/Query/BusRoute")
 # get routeIds in page.text
 
 
 # update routes' infomation
-for routeId in routeIds[:3]:
+for routeId in routeIds:
     page = requests.get("https://ebus.gov.taipei/Route/StopsOfRoute?routeid=" + routeId)
     if page.status_code != 200:
-        print('website of route ' + routeId + 'is broken or not found.')
+        print('website of route ' + routeId + ' is broken or not found.')
         continue
 
     route = BeautifulSoup(page.text, "html.parser")
 
-    routeName = route.find(class_='stationlist-title').string
-    print(routeName)
+    routeName = str(route.find(class_='stationlist-title').string)
+    busRoute = BusRoute(id=routeId, name=routeName)
 
 
-    goDirection = route.find(id='GoDirectionRoute')
-    goStops = goDirection.find_all('span', class_='auto-list auto-list-stationlist')
-    print('去程')
+    goStops = route.find(id='GoDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
     for stop_raw_data in goStops:
         stop = extract_stop_info(stop_raw_data)
-        print(stop['index'], stop['name'], stop['id'], stop['latitude'], stop['longitude'])
-    print('\n')
+        busRoute.route_forward.append(stop['id'])
 
-
-    backDirection = route.find(id='BackDirectionRoute')
-    backStops = backDirection.find_all('span', class_='auto-list auto-list-stationlist')
-    print('回程')
+    backStops = route.find(id='BackDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
     for stop_raw_data in backStops:
         stop = extract_stop_info(stop_raw_data)
-        print(stop['index'], stop['name'], stop['id'], stop['latitude'], stop['longitude'])
-    print('\n')
+        busRoute.route_backward.append(stop['id'])
+
+    routeData[busRoute.id] = busRoute
+    print(busRoute.name + ' is updated.')
 
 # structure of https://ebus.gov.taipei/Route/StopsOfRoute?routeid= routeId
 # route <htnl>
@@ -66,3 +66,9 @@ for routeId in routeIds[:3]:
 # │ └ goStops <li>
 # └ backDirection <ul>
 #   └ backStops <li>
+
+
+
+
+routeData.close()
+stopData.close()
