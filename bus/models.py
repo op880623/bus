@@ -50,3 +50,17 @@ class BusStop(object):
                 if self.id in routeData[route].routeBackward:
                     connectedStops = connectedStops.union(set(routeData[route].routeBackward))
         return connectedStops.difference({self.id})
+
+    def stops_can_go(self, dbRoute=dbRoute):
+        stopsCanGo = set()
+        for route in self.route:
+            with shelve.open(dbRoute) as routeData:
+                stopsCanGo = stopsCanGo.union(routeData[route].stops_after_specific_stop(self.id))
+        return stopsCanGo
+
+    def stops_can_come(self, dbRoute=dbRoute):
+        stopsCanCome = set()
+        for route in self.route:
+            with shelve.open(dbRoute) as routeData:
+                stopsCanCome = stopsCanCome.union(routeData[route].stops_before_specific_stop(self.id))
+        return stopsCanCome

@@ -57,8 +57,10 @@ class TestBusStop(unittest.TestCase):
         with shelve.open(dbRoute) as routeData:
             routeData['0'] = self.route0
             routeData['1'] = self.route1
-        self.stop = BusStop(id='103', name='s103')
-        self.stop.route = {'0', '1'}
+        self.stop103 = BusStop(id='103', name='s103')
+        self.stop103.route = {'0', '1'}
+        self.stop104 = BusStop(id='104', name='s104')
+        self.stop104.route = {'1'}
         # 001       002         003         004         005
         # ---->---->---->---->---->---->---->---->---->---->
         # |           '0'           |
@@ -71,10 +73,16 @@ class TestBusStop(unittest.TestCase):
         self.route1 = None
 
     def test_connected_stops(self):
-        self.assertSetEqual(self.stop.connected_stops(dbRoute), {'101', '102', '104', '105'})
+        self.assertSetEqual(self.stop103.connected_stops(dbRoute), {'101', '102', '104', '105'})
+        self.assertSetEqual(self.stop104.connected_stops(dbRoute), {'103', '105'})
 
+    def test_stops_can_go(self):
+        self.assertSetEqual(self.stop103.stops_can_go(dbRoute), {'101', '102'})
+        self.assertSetEqual(self.stop104.stops_can_go(dbRoute), {'103'})
 
-
+    def test_stops_can_come(self):
+        self.assertSetEqual(self.stop103.stops_can_come(dbRoute), {'104', '105'})
+        self.assertSetEqual(self.stop104.stops_can_come(dbRoute), {'105'})
 
 
 if __name__ == '__main__':
