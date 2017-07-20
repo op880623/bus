@@ -53,7 +53,7 @@ for stopId in list(stopIds):
         log(busStop.name + ' is created.')
 
 # check route pass stop
-    route = re.findall('"UniRouteId":"(\d+)"', page.text)
+    route = set(re.findall('"UniRouteId":"(\d+)"', page.text))
     if busStop.route != route:
         busStop.route = route
         log(busStop.name + ' route is updated.')
