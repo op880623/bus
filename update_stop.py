@@ -20,7 +20,7 @@ def log(text):
     logFile.write(text + '\n')
 
 # update stops' infomation
-log('\nstart update stop time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+log('start update stop time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 # get all stops' id from all routes
 stopIds = set()
@@ -72,7 +72,7 @@ for stopId in list(stopIds):
     stopData[busStop.id] = busStop
     print(busStop.name + ' is updated.')
 
-log('\nfinish update stop time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+log('finish update stop time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + '\n')
 
 
 stopData.close()

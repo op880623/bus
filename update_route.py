@@ -36,7 +36,7 @@ def update_stops_on_route(stops):
 
 
 # update routes' infomation
-log('\nstart update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+log('start update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 
 # get all routes' id
 # now get from file
@@ -92,7 +92,7 @@ for routeId in routeIds:
 # └ backDirection <ul>
 #   └ backStops <li>
 
-log('\nfinish update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+log('finish update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + '\n')
 
 
 routeData.close()
