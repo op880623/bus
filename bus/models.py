@@ -2,8 +2,8 @@ import re
 import shelve
 
 
-dbRoute = 'route'
-dbStop = 'stop'
+dbRoute = 'db/route'
+dbStop = 'db/stop'
 
 class BusRoute(object):
 

@@ -10,7 +10,7 @@ from bus.models import BusRoute, BusStop
 
 logFile = open('update.log', 'a', encoding='utf8')
 
-dbRoute = 'route'
+dbRoute = 'db/route'
 
 routeData = shelve.open(dbRoute)
 

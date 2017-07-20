@@ -3,8 +3,8 @@ import shelve
 
 from bus.models import BusRoute, BusStop
 
-dbRoute = 'route_test'
-dbStop = 'stop_test'
+dbRoute = 'db/route_test'
+dbStop = 'db/stop_test'
 
 class TestBusRoute(unittest.TestCase):
     '''
