@@ -14,6 +14,15 @@ class BusRoute(object):
         self.routeForward = []
         self.routeBackward = []
 
+    def to_json(self):
+        attributes = []
+        attributes.append('"id":"' + self.id + '"')
+        attributes.append('"name":"' + self.name + '"')
+        attributes.append('"routeForward":["' + '","'.join(self.routeForward) + '"]')
+        attributes.append('"routeBackward":["' + '","'.join(self.routeBackward) + '"]')
+        json = '{' + ','.join(attributes) + '}'
+        return json
+
     def stops_after_specific_stop(self, stopId):
         if stopId in self.routeForward:
             return set(self.routeForward[self.routeForward.index(stopId)+1:])
@@ -40,6 +49,16 @@ class BusStop(object):
         self.route = set()
         self.latitude = 0
         self.longitude = 0
+
+    def to_json(self):
+        attributes = []
+        attributes.append('"id":"' + self.id + '"')
+        attributes.append('"name":"' + self.name + '"')
+        attributes.append('"route":["' + '","'.join(self.route) + '"]')
+        attributes.append('"latitude":' + str(self.latitude))
+        attributes.append('"longitude":' + str(self.longitude))
+        json = '{' + ','.join(attributes) + '}'
+        return json
 
     def connected_stops(self, dbRoute=dbRoute):
         connectedStops = set()
